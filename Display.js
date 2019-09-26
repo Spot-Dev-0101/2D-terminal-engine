@@ -8,7 +8,7 @@ class Display{
         this.pixels = [] //2D array. Each sub array is a row
     }
 
-    Update(object){
+    Update(objects){
         this.pixels = []
         console.clear()
         for(var y = 0; y < this.height; y++){
@@ -22,10 +22,12 @@ class Display{
         //object.points.forEach(point => {
             //this.pixels[point[1]-1][point[0]-1] = this.char
         //});
-
-        this.pixelsInBounds(object.maxX, object.minX, object.maxY, object.minY).forEach(pixels => {
-            this.pixels[point[1]-1][point[0]-1] = this.char
+        objects.forEach(object => {
+            this.pixelsInBounds(object.maxX, object.minX, object.maxY, object.minY).forEach(pixels => {
+                this.pixels[point[1]-1][point[0]-1] = this.char
+            });
         });
+        
 
         this.pixels.forEach(row => {
             var rowStr = ""
