@@ -5,6 +5,8 @@ class Object{
         this.minX = this.minPos(0)
         this.maxY = this.maxPos(1)
         this.minY = this.minPos(1)
+        this.midX = this.midPoint(this.minX, this.maxX)
+        this.midY = this.midPoint(this.minY, this.maxY)
     }
 
     maxPos(index){
@@ -16,6 +18,10 @@ class Object{
         return Math.min(...array)
     }
 
+    midPoint(min, max){
+        return Math.round((min+max)/2)
+    }
+
     move(x, y){
         this.points.forEach(point => {
             point[0] += x
@@ -25,6 +31,8 @@ class Object{
         this.minX = this.minPos(0)
         this.maxY = this.maxPos(1)
         this.minY = this.minPos(1)
+        this.midX = this.midPoint(this.minX, this.maxX)
+        this.midY = this.midPoint(this.minY, this.maxY)
     }
 }
 

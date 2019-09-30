@@ -3,18 +3,17 @@ var Object = require("./Object")
 'use strict';
 const ioHook = require('iohook');
 
-//ioHook.on("keydown", event => {
-    //var dir = getMoveDirFromKey(event)
-    //player.move(dir[0], dir[1])
-    //display.Update([ground, player])
-//});
+ioHook.on("keydown", event => {
+    var dir = getMoveDirFromKey(event)
+    tri.move(dir[0], dir[1])
+    display.Update([tri])
+});
 //Register and stark hook 
-//ioHook.start();
+ioHook.start();
 
 
 var display = new Display(80, 20, "▓")
-var ground = new Object([[0, 18], [79, 18], [79, 19], [0, 19]])
-var player = new Object([[2, 14], [5, 14], [5, 17], [2, 17]])
+//var shape = new Object([[]])
 var tri = new Object([[1, 1], [6, 4], [17, 0], [20, 10], [1, 10]])//new Object([[10, 3], [25, 8], [10, 8]])
 //console.log(object.maxX, object.minX, object.maxY, object.minY)
 display.Update([tri])
