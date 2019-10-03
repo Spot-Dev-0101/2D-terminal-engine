@@ -28,9 +28,6 @@ class Display{
                 this.pixels[pixel[1]][pixel[0]] = "\x1b[36m"+this.char+"\x1b[0m"
             })
             this.pixelsInBounds(outLinePixels, object)
-            //this.pixelsInBounds(object.maxX, object.minX, object.maxY, object.minY).forEach(pixel => {
-                //this.pixels[pixel[0]][pixel[1]] = this.char
-            //});
         });
         
         var output = ""
@@ -135,7 +132,6 @@ class Display{
             }
         }
 
-        console.log(start, points)
     }
 
     isPointValid(point, array){
