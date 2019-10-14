@@ -8,8 +8,8 @@ public class SceneObject {
     public String name;
     public Pixel center;
     public Pixel maxBounds;
-    public ArrayList<Pixel> outline = new ArrayList<Pixel>();
-    public ArrayList<Pixel> inner = new ArrayList<Pixel>();
+    //public ArrayList<Pixel> outline = new ArrayList<Pixel>();
+    //public ArrayList<Pixel> inner = new ArrayList<Pixel>();
     public boolean updatePixels = true;
 
     public SceneObject(Pixel[] points, String name){
@@ -23,6 +23,7 @@ public class SceneObject {
     private Pixel max(){
         int maxX = 0;
         int maxY = 0;
+        int maxZ = 0;
 
         for(Pixel pixel : this.points){
             if(pixel.x > maxX){
@@ -31,8 +32,11 @@ public class SceneObject {
             if(pixel.y > maxY) {
                 maxY = pixel.y;
             }
+            if(pixel.z > maxZ) {
+                maxZ = pixel.z;
+            }
         }
-        return new Pixel(maxX, maxY);
+        return new Pixel(maxX, maxY, maxZ);
     }
 
     public void move(Pixel dir){

@@ -1,5 +1,6 @@
 package com.brad.engine;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class Display {
@@ -8,51 +9,38 @@ public class Display {
     private int height;
     public static String pixelChar;
     private Pixel[][] pixels;
+    public Pixel center;
+
 
     public Display(int w, int h){
         this.width = w;
         this.height = h;
+        this.center = new Pixel(h/2, w/2, -100);
         pixelChar = "██";//"▒";
     }
 
     public void Update(Scene scene){
         createInitPixels();
-        ArrayList<SceneObject> objects = scene.objects;
-        for(SceneObject obj : objects){
-            if(obj.outline.size() == 0 || obj.updatePixels == true){
-                outLinePixels(obj);
-            }
-            ArrayList<Pixel> outline = obj.outline;//outLinePixels(obj);
-            for(Pixel pixel : outline){
-                if(pixel.x < width && pixel.y < height){
+        for(SceneObject object : scene.objects){
+            ArrayList<Pixel> converted = convert(outlineCoordinates(object));
 
-                    pixels[pixel.y][pixel.x].value = "\u001B[32m"+"██"+"\u001B[0m";//▓
-                }
+            for(Pixel pixel : converted){
+                pixels[pixel.x][pixel.y].value = "\u001B[30m"+pixelChar+"\u001B[0m";
             }
-            if(obj.inner.size() == 0 || obj.updatePixels == true){
-                innerPixels(obj.outline, obj);
-                obj.updatePixels = false;
-            }
-            ArrayList<Pixel> inner = obj.inner;//innerPixels(outline, obj);
-            for(Pixel pixel : inner){
-                if(pixel.x < width && pixel.y < height){
-                    //System.out.println(pixel.x + " " + pixel.y + "    " + width + " " + height + "        " + pixels.length + " " + pixels[0].length);
-                    pixels[pixel.y][pixel.x].value = "\u001B[31m"+"██"+"\u001B[0m";
-                }
-            }
+
         }
-
-        drawPixels(false);
+        drawPixels();
     }
 
-    private void drawPixels(boolean colored){
+    private void drawPixels(){
         clearScreen();
         for(Pixel[] row : pixels){
             String tempRow = "";
             for(Pixel pixel : row){
-                if(colored == true){
-                    tempRow += pixel.value; //"\x1b[37a"+this.char+"\x1b[0m"
-                } else{
+                //System.out.print(pixel.print() + " =-= ");
+                if(pixel.x == center.x && pixel.y == center.y){
+                    tempRow += "\u001B[31m"+pixel.value+"\u001B[0m";
+                } else {
                     tempRow += pixel.value; //"\x1b[37a"+this.char+"\x1b[0m"
                 }
 
@@ -66,98 +54,84 @@ public class Display {
 
         for (int x = 0; x < height; x++){
             for (int y = 0; y < width; y++){
-                pixels[x][y] = new Pixel(x, y);
+                pixels[x][y] = new Pixel(x, y, 0);
             }
         }
     }
 
-    private void outLinePixels(SceneObject obj){
+    private ArrayList<Pixel> convert(ArrayList<Pixel> outline){
+        ArrayList<Pixel> screenCoord = new ArrayList<>();
 
-        ArrayList<Pixel> outLinePixels = new ArrayList<Pixel>();
+        for(int i = 0; i < outline.size(); i++){
+
+
+            Pixel target = outline.get(i);
+
+            double length = Math.sqrt(Math.abs((center.x*center.x)-(target.x*target.x))+Math.abs((center.y*center.y)-(target.y*target.y))+Math.abs((center.z*center.z)-(target.z*target.z)));
+
+            //System.out.println();
+            //System.out.println(i + " " +length);
+
+            for(int a = 0; a < Math.abs(length); a++){
+                double t = a/length;
+                int x = (int)Math.round((1-t)*target.x+t*center.x);
+                int y = (int)Math.round((1-t)*target.y+t*center.y);
+                int z = (int)Math.round((1-t)*target.z+t*center.z);
+                //coordiantes.add(new Pixel(x, y, z));
+                if(isPixelValid(new Pixel(x, y, z), screenCoord) && isPixelValid(new Pixel(x, y, z), outline) && Math.round(z) == Math.round(center.z-z)){
+                    screenCoord.add(new Pixel(x, y, z));
+                    System.out.println("X: " + x + " Y: " + y + " Z: " + z);
+                }
+
+            }
+
+        }
+
+        return screenCoord;
+    }
+
+    private ArrayList<Pixel> outlineCoordinates(SceneObject obj){
+        ArrayList<Pixel> coordiantes = new ArrayList<>();
+
         Pixel[] points = obj.points;
+
         for(int i = 0; i < points.length; i++){
-            int add = 0;
+
+
             Pixel start = points[i];
             Pixel end;
-            if(i == points.length-1){
-                //System.out.println("Last");
+            if(i >= points.length-1){
                 start = points[0];
                 end = points[i];
-
             } else{
                 end = points[i+1];
             }
+
 
             if(end.x < start.x){
                 start = points[i+1];
                 end = points[i];
             }
 
-            if(i == points.length-2){
-                add = 1;
-            }
+            double length = Math.sqrt(((end.x*end.x)-(start.x*start.x))+((end.y*end.y)-(start.y*start.y))+((end.z*end.z)-(start.z*start.z)));
+            //System.out.println(Math.sqrt((end.x*end.x)-(start.x*start.x)) + " " + Math.sqrt((end.y*end.y)-(start.y*start.y)) + " " +Math.abs((end.z*end.z)-(start.z*start.z)));
+            //ystem.out.println("From: " + start.print() + " \nTo: " + end.print() + "\nLength: " + length + "\ncoords:\n\n ");
 
-            double length = Math.sqrt(((end.x*end.x)-(start.x*start.x))+((end.y*end.y)-(start.y*start.y)));
-            int len = 0;
-            for(int z = 0; z < Math.abs(length)+add; z++){
-                double t = z/length;
+            for(int a = 0; a < Math.abs(length); a++){
+                double t = a/length;
                 int x = (int)Math.round((1-t)*start.x+t*end.x);
                 int y = (int)Math.round((1-t)*start.y+t*end.y);
-                Pixel pixel = new Pixel(x, y);
-
-                if(isPixelValid(pixel, outLinePixels)) {
-                    outLinePixels.add(pixel);
-                    //System.out.print(" added");
-                    len++;
-                }
-                //System.out.println(i + " | " + z + " x: " + x + " y: " + y);
+                int z = (int)Math.round((1-t)*start.z+t*end.z);
+                coordiantes.add(new Pixel(x, y, z));
+                //System.out.println("X: " + x + " Y: " + y + " Z: " + z);
             }
-            //System.out.println(i + "/" + (points.length-1) +" Start: " + start.x + " " + start.y + " End: " + end.x + " " + end.y + " outline len: " + len + " line len: " + length);
+
+
+
+
         }
-        obj.outline = outLinePixels;
-    }
 
-    private void innerPixels(ArrayList<Pixel> outline, SceneObject obj){
-        ArrayList<Pixel> innerPixels = new ArrayList<Pixel>();
-        System.out.println(obj.maxBounds.x * obj.maxBounds.y);
-        Pixel start = obj.center;
-        innerPixels.add(start);
-
-        for(int i = 0; i < innerPixels.size(); i++){
-            Pixel point = innerPixels.get(i);
-
-            if(arrayIncludes(outline, point) == false){
-                //innerPixels.add(point);
-                Pixel n = new Pixel(point.x, point.y-1);
-                Pixel s = new Pixel(point.x, point.y+1);
-                Pixel e = new Pixel(point.x+1, point.y);
-                Pixel w = new Pixel(point.x-1, point.y);
-
-                if(isPixelValid(n, innerPixels) && isPixelValid(n, outline)){
-                    innerPixels.add(n);
-                    //System.out.println("N: " + n);
-                }
-                if(isPixelValid(s, innerPixels) && isPixelValid(s, outline)){
-                    innerPixels.add(s);
-                    //System.out.println("S: " + s);
-                }
-                if(isPixelValid(e, innerPixels) && isPixelValid(e, outline)){
-                    innerPixels.add(e);
-                    //System.out.println("E: " + e);
-                }
-                if(isPixelValid(w, innerPixels) && isPixelValid(w, outline)){
-                    innerPixels.add(w);
-                    //System.out.println("W: " + w);
-                }
-            }
-
-            if(innerPixels.size() >= 500){
-                System.out.println("Reached limit");
-                break;
-            }
-        }
-        obj.inner = innerPixels;
-        //return innerPixels;
+        return coordiantes;
     }
 
     private boolean isPixelValid(Pixel pixel, ArrayList<Pixel> array){
