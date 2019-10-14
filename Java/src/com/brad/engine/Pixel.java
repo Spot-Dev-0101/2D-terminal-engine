@@ -1,3 +1,5 @@
+package com.brad.engine;
+
 public class Pixel {
 
     public int x;
@@ -8,6 +10,11 @@ public class Pixel {
         this.x = x;
         this.y = y;
         this.value = Display.pixelChar;
+    }
+
+    public void add(Pixel pixel){
+        this.x += pixel.x;
+        this.y += pixel.y;
     }
 
     public static Pixel midPoint(Pixel[] pixels){
