@@ -1,7 +1,11 @@
 package com.brad.engine;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class Display {
 
@@ -10,6 +14,7 @@ public class Display {
     public static String pixelChar;
     private Pixel[][] pixels;
     public Pixel center;
+    public static JFrame frame  = new JFrame("WINDOW");
 
 
     public Display(int w, int h){
@@ -22,17 +27,42 @@ public class Display {
     public void Update(Scene scene){
         createInitPixels();
         for(SceneObject object : scene.objects){
-            ArrayList<Pixel> converted = convert(outlineCoordinates(object));
+            ArrayList<Pixel> converted = convert(outlinePathCoordinates(object));
 
             for(Pixel pixel : converted){
-                pixels[pixel.x][pixel.y].value = "\u001B[30m"+pixelChar+"\u001B[0m";
+                if(isPixelInBounds(pixel)){
+                    pixels[pixel.x][pixel.y].value = pixel.value;//Color.red.getRGB();//"color";//"\u001B[30m"+pixelChar+"\u001B[0m";
+                }
+
             }
 
         }
-        drawPixels();
+        drawPixelsWindow();
+        //drawPixelsTerminal();
     }
 
-    private void drawPixels(){
+    private void drawPixelsWindow(){
+        BufferedImage bufferedImage = new BufferedImage(height, width, BufferedImage.TYPE_INT_RGB);
+
+        for(Pixel[] row : pixels){
+            String tempRow = "";
+            for(Pixel pixel : row) {
+                if(isPixelInBounds(pixel)){
+                    bufferedImage.setRGB(pixel.x, pixel.y, pixel.value);
+                }
+            }
+        }
+
+
+        frame.setVisible(true);
+        frame.add(new JLabel(new ImageIcon(bufferedImage)));
+        frame.pack();
+        // Better to DISPOSE than EXIT
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.repaint();
+    }
+
+    private void drawPixelsTerminal(){
         clearScreen();
         for(Pixel[] row : pixels){
             String tempRow = "";
@@ -55,42 +85,36 @@ public class Display {
         for (int x = 0; x < height; x++){
             for (int y = 0; y < width; y++){
                 pixels[x][y] = new Pixel(x, y, 0);
+                pixels[x][y].value = Color.gray.getRGB();
             }
         }
     }
+
 
     private ArrayList<Pixel> convert(ArrayList<Pixel> outline){
         ArrayList<Pixel> screenCoord = new ArrayList<>();
 
         for(int i = 0; i < outline.size(); i++){
+            Pixel point = outline.get(i);
+            int x = Math.round(point.x * ((float)Math.abs(center.z))/((float)point.z));
+            int y = Math.round(point.y * ((float)Math.abs(center.z))/((float)point.z));
+            Pixel coord = new Pixel(x, y, 0);
+            coord.value = Color.green.getRGB();
 
+            //System.out.println((Math.abs(center.z)/point.z));
+            if(isPixelInBounds(coord)){
+                //System.out.println(x + " " + y + " -=- " + point.x + "  " + ((float)Math.abs(center.z))/((float)point.z));
 
-            Pixel target = outline.get(i);
-
-            double length = Math.sqrt(Math.abs((center.x*center.x)-(target.x*target.x))+Math.abs((center.y*center.y)-(target.y*target.y))+Math.abs((center.z*center.z)-(target.z*target.z)));
-
-            //System.out.println();
-            //System.out.println(i + " " +length);
-
-            for(int a = 0; a < Math.abs(length); a++){
-                double t = a/length;
-                int x = (int)Math.round((1-t)*target.x+t*center.x);
-                int y = (int)Math.round((1-t)*target.y+t*center.y);
-                int z = (int)Math.round((1-t)*target.z+t*center.z);
-                //coordiantes.add(new Pixel(x, y, z));
-                if(isPixelValid(new Pixel(x, y, z), screenCoord) && isPixelValid(new Pixel(x, y, z), outline) && Math.round(z) == Math.round(center.z-z)){
-                    screenCoord.add(new Pixel(x, y, z));
-                    System.out.println("X: " + x + " Y: " + y + " Z: " + z);
-                }
-
+                screenCoord.add(coord);
             }
+
 
         }
 
         return screenCoord;
     }
 
-    private ArrayList<Pixel> outlineCoordinates(SceneObject obj){
+    private ArrayList<Pixel> outlinePathCoordinates(SceneObject obj){
         ArrayList<Pixel> coordiantes = new ArrayList<>();
 
         Pixel[] points = obj.points;
@@ -113,25 +137,33 @@ public class Display {
                 end = points[i];
             }
 
+            if(start.z > end.z){
+                Pixel tempStart = start;
+                start = end;
+                end = tempStart;
+            }
+
             double length = Math.sqrt(((end.x*end.x)-(start.x*start.x))+((end.y*end.y)-(start.y*start.y))+((end.z*end.z)-(start.z*start.z)));
             //System.out.println(Math.sqrt((end.x*end.x)-(start.x*start.x)) + " " + Math.sqrt((end.y*end.y)-(start.y*start.y)) + " " +Math.abs((end.z*end.z)-(start.z*start.z)));
-            //ystem.out.println("From: " + start.print() + " \nTo: " + end.print() + "\nLength: " + length + "\ncoords:\n\n ");
-
+            //System.out.println("From: " + start.print() + " \nTo: " + end.print() + "\nLength: " + length + "\ncoords:\n\n ");
             for(int a = 0; a < Math.abs(length); a++){
                 double t = a/length;
                 int x = (int)Math.round((1-t)*start.x+t*end.x);
                 int y = (int)Math.round((1-t)*start.y+t*end.y);
                 int z = (int)Math.round((1-t)*start.z+t*end.z);
                 coordiantes.add(new Pixel(x, y, z));
-                //System.out.println("X: " + x + " Y: " + y + " Z: " + z);
             }
-
-
-
 
         }
 
-        return coordiantes;
+        return coordiantes;//new ArrayList<Pixel>(Arrays.asList(obj.points));
+    }
+
+    private boolean isPixelInBounds(Pixel p){
+        if(p.x >= 0 && p.x < width-1 && p.y >= 0 && p.y <= height-1){
+            return true;
+        }
+        return false;
     }
 
     private boolean isPixelValid(Pixel pixel, ArrayList<Pixel> array){

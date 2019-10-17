@@ -1,5 +1,7 @@
 package com.brad.engine;
 
+import java.awt.*;
+
 public class Pixel {
 
     /*
@@ -14,13 +16,13 @@ public class Pixel {
     public int x;
     public int y;
     public int z;
-    public String value;
+    public int value;
 
     public Pixel(int x, int y, int z){
         this.x = x;
         this.y = y;
         this.z = z;
-        this.value = Display.pixelChar;
+        //this.value = Display.pixelChar;
     }
 
     public void add(Pixel pixel){
@@ -48,6 +50,10 @@ public class Pixel {
 
     public static double length(Pixel from, Pixel to){
         return Math.sqrt(((to.x*to.x)-(from.x*from.x))+((to.y*to.y)-(from.y*from.y))+((to.z*to.z)-(from.z*from.z)));
+    }
+
+    public static int onLine(int from, int to, Double t){
+        return (int)Math.round((1-t)*from+t*to);
     }
 
 }
