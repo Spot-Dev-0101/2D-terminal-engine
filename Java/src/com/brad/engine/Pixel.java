@@ -19,8 +19,8 @@ public class Pixel {
     public int value;
 
     public Pixel(int x, int y, int z){
-        this.x = x;
-        this.y = y;
+        this.x = x;//x-Game.width;
+        this.y = y;//y-Game.height;
         this.z = z;
         //this.value = Display.pixelChar;
     }
@@ -41,7 +41,7 @@ public class Pixel {
             y += pixel.y;
             z += pixel.z;
         }
-        return new Pixel(x/pixels.length, y/pixels.length, z/pixels.length);
+        return new Pixel((x/pixels.length)+Game.width, (y/pixels.length)+Game.height, z/pixels.length);
     }
 
     public String print(){

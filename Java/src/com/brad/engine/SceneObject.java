@@ -46,4 +46,12 @@ public class SceneObject {
             this.updatePixels = true;
         }
     }
+
+    public void scale(Pixel scale){
+        for(Pixel p : points){
+            p.x = p.x*scale.x;
+            p.y = p.y*scale.y;
+            p.z = p.z*scale.z;
+        }
+    }
 }

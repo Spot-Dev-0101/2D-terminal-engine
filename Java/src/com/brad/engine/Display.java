@@ -2,6 +2,9 @@ package com.brad.engine;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -13,8 +16,10 @@ public class Display {
     private int height;
     public static String pixelChar;
     private Pixel[][] pixels;
-    public Pixel center;
+    public static Pixel center;
     public static JFrame frame  = new JFrame("WINDOW");
+    public int frameCount = 0;
+    private BufferedImage image;
 
 
     public Display(int w, int h){
@@ -22,7 +27,10 @@ public class Display {
         this.height = h;
         this.center = new Pixel(h/2, w/2, -100);
         pixelChar = "██";//"▒";
+        image = new BufferedImage(height, width, BufferedImage.TYPE_INT_RGB);
+
     }
+
 
     public void Update(Scene scene){
         createInitPixels();
@@ -42,24 +50,26 @@ public class Display {
     }
 
     private void drawPixelsWindow(){
-        BufferedImage bufferedImage = new BufferedImage(height, width, BufferedImage.TYPE_INT_RGB);
+        //frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+        //frame  = new JFrame("WINDOW");
 
         for(Pixel[] row : pixels){
             String tempRow = "";
             for(Pixel pixel : row) {
                 if(isPixelInBounds(pixel)){
-                    bufferedImage.setRGB(pixel.x, pixel.y, pixel.value);
+                    image.setRGB(pixel.x, pixel.y, pixel.value);
                 }
             }
         }
 
-
         frame.setVisible(true);
-        frame.add(new JLabel(new ImageIcon(bufferedImage)));
+        frame.add(new JLabel(new ImageIcon(image)));
         frame.pack();
         // Better to DISPOSE than EXIT
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.repaint();
+        //frame.repaint();
+        frameCount++;
+        System.out.println(frameCount);
     }
 
     private void drawPixelsTerminal(){
@@ -96,8 +106,9 @@ public class Display {
 
         for(int i = 0; i < outline.size(); i++){
             Pixel point = outline.get(i);
-            int x = Math.round(point.x * ((float)Math.abs(center.z))/((float)point.z));
-            int y = Math.round(point.y * ((float)Math.abs(center.z))/((float)point.z));
+            float z = ((float)Math.abs(center.z))/((float)point.z);
+            int x = Math.round(point.x * z);//Math.round((((float)Math.abs(center.x))/((float)point.x)*z)*100);
+            int y = Math.round(point.y * z);
             Pixel coord = new Pixel(x, y, 0);
             coord.value = Color.green.getRGB();
 
